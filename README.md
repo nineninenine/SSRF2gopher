@@ -1,5 +1,5 @@
 # SSRF2gopher
-Gopher protocol is used a lot when exploiting SSRF. This script generates a gopher payload what can be used to submit data to a webform.
+Gopher protocol is used a lot when exploiting SSRF. This script generates a gopher payload that can be used to replicate an HTTP request.
 A Server-side Request Forgery (SSRF) vulnerability occurs when an attacker manipulates a server-side application into making HTTP requests to a domain of their choice, even internal applications can be a target.
 
 ![image](https://github.com/eMVee-NL/SSRF2gopher/assets/45883753/55ce27c4-9f24-4c13-9212-3822fb7032e3)
