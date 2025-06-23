@@ -7,14 +7,27 @@ A Server-side Request Forgery (SSRF) vulnerability occurs when an attacker manip
 
 
 ## Usage
-It's pretty simple to generate a payload, just start the script.
+
 ```
-python3 SSRF2gopher.py
+usage: SSRF2gopher.py [-h] [-u HOST] [-p PORT] [-e ENDPOINT] [-H [HEADERS ...]] [-m METHOD]
+
+Gopher payload generator with custom headers support
+
+options:
+  -h, --help            show this help message and exit
+  -u, --host HOST       Target host address
+  -p, --port PORT       Gopher port number
+  -e, --endpoint ENDPOINT
+                        Target endpoint
+  -H, --headers [HEADERS ...]
+                        Custom headers in format "Name:Value"
+  -m, --method METHOD   HTTP method (GET, POST, PUT, etc.)
 ```
+
 Enter the following details:
 - Host, example `localhost`
 - Port number on target (host) for gopher, example `80`
 - Endpoint (path), example `/api/user/create/`
 - Data what should be submitted something like, example `username=Hacker&password=Password1234&email=email@domain.tld`
-
-The 'double' encoded payload can be usedto attack via the browser. _(This worked for me while testing locally)_
+- Method (POST, GET...)
+- HTTP Headers (Header:value)
