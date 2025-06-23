@@ -5,8 +5,6 @@ A Server-side Request Forgery (SSRF) vulnerability occurs when an attacker manip
 ![image](https://github.com/eMVee-NL/SSRF2gopher/assets/45883753/55ce27c4-9f24-4c13-9212-3822fb7032e3)
 
 
-_**Currently this script genererates only a payload for the POST method and it is not final yet.**_
-
 
 ## Usage
 It's pretty simple to generate a payload, just start the script.

